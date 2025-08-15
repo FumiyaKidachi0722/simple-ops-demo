@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { ErrorInfo } from "@/components/atoms/error-toast";
 import { FirebaseAuthRepository } from "@/infrastructure/firebase/authRepository";
@@ -14,29 +14,24 @@ export function useCasts() {
 
   useEffect(() => {
     const repo = new FirebaseAuthRepository();
-
-    const fetchCasts = async () => {
-      try {
-        const users = await repo.listUsers();
+    repo
+      .listUsers()
+      .then((users) => {
         const cs = users
           .filter((u) => u.role === ROLES.CAST)
           .map((u) => ({ id: u.id, name: u.name }));
         setCasts(cs);
-        setSelectedId(cs[0]?.id ?? "");
-      } catch {
-        setError({ id: Date.now(), message: "キャストの取得に失敗しました" });
-      }
-    };
-
-    void fetchCasts();
+        if (cs.length > 0) setSelectedId(cs[0].id);
+      })
+      .catch(() =>
+        setError({ id: Date.now(), message: "キャストの取得に失敗しました" }),
+      );
   }, []);
 
-  const castMap = useMemo(
-    () => new Map(casts.map((c) => [c.id, c.name])),
-    [casts],
-  );
-
-  const nameById = (id: string) => castMap.get(id) ?? "";
+  const nameById = (id: string) => {
+    const c = casts.find((c) => c.id === id);
+    return c ? c.name : "";
+  };
 
   return { casts, selectedId, setSelectedId, error, nameById };
 }

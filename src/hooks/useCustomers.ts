@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { ErrorInfo } from "@/components/atoms/error-toast";
 import { FirebaseCustomerRepository } from "@/infrastructure/firebase/customerRepository";
@@ -14,28 +14,20 @@ export function useCustomers(currentUser: User) {
 
   useEffect(() => {
     const repo = new FirebaseCustomerRepository();
-
-    const fetchCustomers = async () => {
-      try {
-        const cs = await repo.list(currentUser);
+    repo
+      .list(currentUser)
+      .then((cs) => {
         setCustomers(cs);
-        setSelectedId(cs[0]?.id ?? 0);
-      } catch {
-        setError({ id: Date.now(), message: "顧客の取得に失敗しました" });
-      }
-    };
-
-    void fetchCustomers();
+        if (cs.length > 0) setSelectedId(cs[0].id);
+      })
+      .catch(() =>
+        setError({ id: Date.now(), message: "顧客の取得に失敗しました" }),
+      );
   }, [currentUser]);
 
-  const customerMap = useMemo(
-    () => new Map(customers.map((c) => [c.id, c])),
-    [customers],
-  );
-
   const nameById = (id: number) => {
-    const c = customerMap.get(id);
-    return c ? `${c.name} (${c.id})` : "";
+    const c = customers.find((c) => c.id === id);
+    return c ? `${c.name}([${c.id}])` : "";
   };
 
   return {

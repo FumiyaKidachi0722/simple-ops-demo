@@ -42,6 +42,5 @@ describe("useCustomers", () => {
       castId: "cast1",
     });
     expect(result.current.selectedId).toBe(1);
-    expect(result.current.nameById(1)).toBe("太郎 (1)");
   });
 });

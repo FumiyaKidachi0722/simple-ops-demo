@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CustomerSelect } from "@/components/atoms/customer-select";
 import { type ErrorInfo, ErrorToast } from "@/components/atoms/error-toast";
@@ -181,8 +181,16 @@ function BottlesContent({ currentUser }: { currentUser: User }) {
     }
   };
 
-  const productNameById = (id: number) =>
-    products.find((p) => p.id === id)?.name || "";
+  const productsMap = useMemo(() => {
+    const m = new Map<number, Product>();
+    for (const p of products) m.set(p.id, p);
+    return m;
+  }, [products]);
+
+  const productNameById = useCallback(
+    (id: number) => productsMap.get(id)?.name ?? "",
+    [productsMap],
+  );
 
   const filteredProducts = useMemo(() => {
     const q = productSearch.trim().toLowerCase();
@@ -199,10 +207,10 @@ function BottlesContent({ currentUser }: { currentUser: User }) {
     if (!q) return keeps;
     return keeps.filter((k) => {
       const cname = customerNameById(k.customerId)?.toLowerCase() ?? "";
-      const pname = productNameById(k.productId)?.toLowerCase() ?? "";
+      const pname = productsMap.get(k.productId)?.name?.toLowerCase() ?? "";
       return cname.includes(q) || pname.includes(q) || String(k.id).includes(q);
     });
-  }, [keeps, keepSearch, customerNameById, productNameById]);
+  }, [keeps, keepSearch, customerNameById, productsMap]);
 
   return (
     <div className="space-y-4">
@@ -226,6 +234,7 @@ function BottlesContent({ currentUser }: { currentUser: User }) {
               onChange={(e) => setPrice(e.target.value)}
               placeholder="価格"
               type="number"
+              inputMode="decimal"
             />
             <Button onClick={addProduct} className="bg-blue-500 text-white">
               {editingProductId ? "更新" : "マスタ追加"}

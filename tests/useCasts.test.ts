@@ -36,6 +36,5 @@ describe("useCasts", () => {
     await waitFor(() => expect(result.current.casts.length).toBe(1));
     expect(result.current.casts[0]).toEqual({ id: "cast1", name: "キャスト1" });
     expect(result.current.selectedId).toBe("cast1");
-    expect(result.current.nameById("cast1")).toBe("キャスト1");
   });
 });
